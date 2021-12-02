@@ -254,6 +254,14 @@ function wsSetup() {
     socket = new WebSocket(url);
     socket.onopen = function() {
         //XXX: TODO What are you going to do here?
+	    new_socket= new WebSocket(url);
+	    new_socket.onopen=function()
+                {
+                    
+                    new_socket.send("send world");
+                    
+                    new_socket.close();
+                }
     };
     socket.onerror = function(msg) {
         debug("WebSocket Error:" + msg.data);
@@ -261,17 +269,34 @@ function wsSetup() {
     socket.onmessage = function(msg) {  
         try {
             debug("WebSocket Recv:" + msg.data);
-            //XXX: TODO What are you going to do here?            
+            //XXX: TODO What are you going to do here?
+	     newworld(JSON.parse(msg.data));
+             drawNextFrame();
+             drawFrame();
         } catch (e) {
             alert("socket on message: " + e);
         }
     }; 
+	
+	socket.onclose = function () {
+                socket.close();
 }
 
 wsSetup();
 
+function newworld(data) {
+            world = {};
+            world = data;
+
+        }
+        function drawnew(data) {
+            drawCircle(context, data);
+        }
 
 
+function updateSocket(data) {
+            socket.send(JSON.stringify(data));
+        }
 
 // 30 frames per second
 setInterval( update, 1000/30.0);
