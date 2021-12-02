@@ -35,6 +35,7 @@ var W = canvas.width  = window.innerWidth-6;
 var H = canvas.height = window.innerHeight-50;
 var wscounter = 0;
 var socket;
+	    
 
 function debug(str) {
     var debugDiv = document.getElementById('debug');
@@ -121,10 +122,13 @@ function getPosition(e) {
 	}
 }
 
+}
 function addEntity(entity, data) {
-    world[entity] = data;
-    drawNextFrame(); // (but should we?)
+	//drawNextFrame(); // (but should we?)
     //XXX: Send a XHTML Request that updates the entity you just modified!
+    var message = {};
+    message[entity]=data;
+    socket.send(JSON.stringify(message));
 }
 var counter = 0;
 function addEntityWithoutName(data) {
@@ -254,14 +258,7 @@ function wsSetup() {
     socket = new WebSocket(url);
     socket.onopen = function() {
         //XXX: TODO What are you going to do here?
-	    new_socket= new WebSocket(url);
-	    new_socket.onopen=function()
-                {
-                    
-                    new_socket.send("send world");
-                    
-                    new_socket.close();
-                }
+	    socket.send(JSON.stringify(world));
     };
     socket.onerror = function(msg) {
         debug("WebSocket Error:" + msg.data);
@@ -270,9 +267,15 @@ function wsSetup() {
         try {
             debug("WebSocket Recv:" + msg.data);
             //XXX: TODO What are you going to do here?
-	     newworld(JSON.parse(msg.data));
+	     var message= JSON.parse(msg.data);
+	     for (let entity in message){
+               if (!(entity in world)){ 
+                        world[entity]=message[entity];
+               }
+            }               
+                
              drawNextFrame();
-             drawFrame();
+            
         } catch (e) {
             alert("socket on message: " + e);
         }
@@ -284,19 +287,10 @@ function wsSetup() {
 
 wsSetup();
 
-function newworld(data) {
-            world = {};
-            world = data;
-
-        }
-        function drawnew(data) {
-            drawCircle(context, data);
-        }
 
 
-function updateSocket(data) {
-            socket.send(JSON.stringify(data));
-        }
+
+
 
 // 30 frames per second
 setInterval( update, 1000/30.0);
